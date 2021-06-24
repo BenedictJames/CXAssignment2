@@ -29,7 +29,7 @@ def df_inst(x):
     return RCPSP_inst_dict_named[sName[x]]
 # Function for extracting n for test instance x from dictionary (int)
 def n_inst(x):
-    return RCPSP_inst_dict_named[sName[x]].iloc[0, 0]
+    return int(RCPSP_inst_dict_named[sName[x]].iloc[0, 0])
 # Function for extracting k for test instance x from dictionary (int)
 def k_inst(x):
     return RCPSP_inst_dict_named[sName[x]].iloc[0, 1]
@@ -47,10 +47,13 @@ def s_i_inst(x):
     return RCPSP_inst_dict_named[sName[x]].iloc[2:2+n_inst(x).astype(int)-1, k_inst(x)+1].tolist()
 # Function for extracting j^i_s for test instance x from dictionary (df)
 def j_i_s_inst(x):
-    return RCPSP_inst_dict_named[sName[x]].iloc[2:2+n_inst(x).astype(int)-1, k_inst(x)+2:len(RCPSP_inst_dict_named[sName[x]].columns)]
+    return RCPSP_inst_dict_named[sName[x]].iloc[2:2+n_inst(x)-1, k_inst(x)+2:len(RCPSP_inst_dict_named[sName[x]].columns)]
+
+def arcs(x):
+    return list((RCPSP_inst_dict_named[sName[x]])
+
 
 # Model Building for instance 1
-
 # Model
 model_SDT = Model("RCPSP: Time-Indexed Formulation with Step Variables and aggregated precedence constraints")
 
@@ -60,6 +63,17 @@ model_SDDT = Model("RCPSP: Time-Indexed Formulation with Step Variables and disa
 ES_i = 0
 LS_i = sum(d_i_inst(1))
 
-for i in range(1, n_inst(1)-1)
-    for t in range(ES_i, LS_i):
-        model_SDDT.addVars()
+# Variables
+#for i in range(1, n_inst(1)):
+#    for t in range(ES_i, LS_i):
+y = model_SDDT.addVars(n_inst(1),LS_i, vtype = GRB.BINARY, name = "step variable")
+
+# Objective Function
+model_SDDT.setObjective(quicksum(t * (y[n_inst(1)][t]-y[n_inst(1)][t-1]) for t in range(ES_i+1, LS_i))+y[n_inst(1)][ES_i])
+
+# Constraints
+# model_SDDT.addConstrs((y[i, t] == 0 for i in range(0, n_inst(1)) for t in range(0, ES_i-1)), name="no starting before ES_i")
+model_SDDT.addConstrs((y[i, LS_i] == 1 for i in range(0, n_inst(1))), name="all activities have started at LS_i")
+model_SDDT.addConstrs(for (i,s) in arcs(1))
+
+
