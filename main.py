@@ -48,3 +48,18 @@ def s_i_inst(x):
 # Function for extracting j^i_s for test instance x from dictionary (df)
 def j_i_s_inst(x):
     return RCPSP_inst_dict_named[sName[x]].iloc[2:2+n_inst(x).astype(int)-1, k_inst(x)+2:len(RCPSP_inst_dict_named[sName[x]].columns)]
+
+# Model Building for instance 1
+
+# Model
+model_SDT = Model("RCPSP: Time-Indexed Formulation with Step Variables and aggregated precedence constraints")
+
+model_SDDT = Model("RCPSP: Time-Indexed Formulation with Step Variables and disaggregated precedence constraints")
+
+# Using naive approach to create set t
+ES_i = 0
+LS_i = sum(d_i_inst(1))
+
+for i in range(1, n_inst(1)-1)
+    for t in range(ES_i, LS_i):
+        model_SDDT.addVars()
