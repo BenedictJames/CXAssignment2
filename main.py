@@ -1,0 +1,50 @@
+import pandas as pd
+from gurobipy import *
+
+# Importing the excel file
+RCPSP_data = pd.ExcelFile('RCPSP_data.xlsx')
+# Extracting excel sheet names
+sName = RCPSP_data.sheet_names
+# Creating dictionary with key = sheet name, value = df
+RCPSP_data_dict = RCPSP_data.parse(sName)
+# Create df with results excel sheet
+Results_df = RCPSP_data_dict[sName[0]]
+# Create dictionary with test instances: with key = sheet name, value = df
+RCPSP_inst_dict = RCPSP_data.parse(sName[1:])
+
+
+# Set col names of df's in RCPSP_inst_dict to col_names
+# Create dictionary with keys = original column names  and values = new column names
+orig_col_names = list(RCPSP_data_dict[sName[1]].columns)
+new_col_names = ["d_i", "r_i_1", "r_i_2", "r_i_3", "r_i_4", "s_i", "j_1_i", "j_2_i", "j_3_i"]
+names_dict = {orig_col_names[i]: new_col_names[i] for i in range(len(orig_col_names))}
+# function for changing column names of df
+def rename_columns(df, dict):
+    return df.rename(columns = dict)
+# Apply function to dictionary containing all RCPSP test instances as dfs; this will name the dfs' columns
+RCPSP_inst_dict_named = {k: rename_columns(v, names_dict) for k,v in RCPSP_inst_dict.items()}
+
+# Function for extracting the single test instance x df from dictionary (df)
+def df_inst(x):
+    return RCPSP_inst_dict_named[sName[x]]
+# Function for extracting n for test instance x from dictionary (int)
+def n_inst(x):
+    return RCPSP_inst_dict_named[sName[x]].iloc[0, 0]
+# Function for extracting k for test instance x from dictionary (int)
+def k_inst(x):
+    return RCPSP_inst_dict_named[sName[x]].iloc[0, 1]
+# Function for extracting R_k for test instance x from dictionary (list)
+def R_k_inst(x):
+    return RCPSP_inst_dict_named[sName[x]].iloc[1, 0:k_inst(x).astype(int)].tolist()
+# Function for extracting d_i for test instance x from dictionary (list)
+def d_i_inst(x):
+    return RCPSP_inst_dict_named[sName[x]].iloc[2:2+n_inst(x).astype(int), 0].tolist()
+# Function for extracting r_i_k for test instance x from dictionary (df)
+def r_i_k_inst(x):
+    return RCPSP_inst_dict_named[sName[x]].iloc[2:2+n_inst(x).astype(int), 1:k_inst(x)+1]
+# Function for extracting s_i for test instance x from dictionary (list)
+def s_i_inst(x):
+    return RCPSP_inst_dict_named[sName[x]].iloc[2:2+n_inst(x).astype(int)-1, k_inst(x)+1].tolist()
+# Function for extracting j^i_s for test instance x from dictionary (df)
+def j_i_s_inst(x):
+    return RCPSP_inst_dict_named[sName[x]].iloc[2:2+n_inst(x).astype(int)-1, k_inst(x)+2:len(RCPSP_inst_dict_named[sName[x]].columns)]
