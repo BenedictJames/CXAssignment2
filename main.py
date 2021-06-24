@@ -32,25 +32,30 @@ def n_inst(x):
     return int(RCPSP_inst_dict_named[sName[x]].iloc[0, 0])
 # Function for extracting k for test instance x from dictionary (int)
 def k_inst(x):
-    return RCPSP_inst_dict_named[sName[x]].iloc[0, 1]
+    return int(RCPSP_inst_dict_named[sName[x]].iloc[0, 1])
 # Function for extracting R_k for test instance x from dictionary (list)
 def R_k_inst(x):
-    return RCPSP_inst_dict_named[sName[x]].iloc[1, 0:k_inst(x).astype(int)].tolist()
+    return RCPSP_inst_dict_named[sName[x]].iloc[1, 0:k_inst(x)].tolist()
 # Function for extracting d_i for test instance x from dictionary (list)
 def d_i_inst(x):
-    return RCPSP_inst_dict_named[sName[x]].iloc[2:2+n_inst(x).astype(int), 0].tolist()
+    return RCPSP_inst_dict_named[sName[x]].iloc[2:2+n_inst(x), 0].tolist()
 # Function for extracting r_i_k for test instance x from dictionary (df)
 def r_i_k_inst(x):
-    return RCPSP_inst_dict_named[sName[x]].iloc[2:2+n_inst(x).astype(int), 1:k_inst(x)+1]
+    return RCPSP_inst_dict_named[sName[x]].iloc[2:2+n_inst(x), 1:k_inst(x)+1]
 # Function for extracting s_i for test instance x from dictionary (list)
 def s_i_inst(x):
-    return RCPSP_inst_dict_named[sName[x]].iloc[2:2+n_inst(x).astype(int)-1, k_inst(x)+1].tolist()
+    return RCPSP_inst_dict_named[sName[x]].iloc[2:2+n_inst(x)-1, k_inst(x)+1].tolist()
 # Function for extracting j^i_s for test instance x from dictionary (df)
 def j_i_s_inst(x):
     return RCPSP_inst_dict_named[sName[x]].iloc[2:2+n_inst(x)-1, k_inst(x)+2:len(RCPSP_inst_dict_named[sName[x]].columns)]
 
 def arcs(x):
-    return list((RCPSP_inst_dict_named[sName[x]])
+    a = j_i_s_inst(x)
+    a.index = range(1,len(a)+1)
+    for r in len(a):
+        for c in len(a.columns):
+            b = [(r, a.i[])]
+    return a
 
 
 # Model Building for instance 1
