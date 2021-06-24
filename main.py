@@ -1,5 +1,6 @@
 import pandas as pd
 from gurobipy import *
+import math
 
 # Importing the excel file
 RCPSP_data = pd.ExcelFile('RCPSP_data.xlsx')
@@ -46,16 +47,18 @@ def r_i_k_inst(x):
 def s_i_inst(x):
     return RCPSP_inst_dict_named[sName[x]].iloc[2:2+n_inst(x)-1, k_inst(x)+1].tolist()
 # Function for extracting j^i_s for test instance x from dictionary (df)
-def j_i_s_inst(x):
+def j_i_j_inst(x):
     return RCPSP_inst_dict_named[sName[x]].iloc[2:2+n_inst(x)-1, k_inst(x)+2:len(RCPSP_inst_dict_named[sName[x]].columns)]
 
+# Create list with all precedence relations as tuples
 def arcs(x):
-    a = j_i_s_inst(x)
+    a = j_i_j_inst(x)
     a.index = range(1,len(a)+1)
-    for r in len(a):
-        for c in len(a.columns):
-            b = [(r, a.i[])]
-    return a
+    b = []
+    for r in range(0, len(a)):
+        for c in range(0, len(a.columns)):
+            if (math.isnan(a.iat[r,c]) == False): b.append((r, a.iat[r,c]))
+    return b
 
 
 # Model Building for instance 1
@@ -79,6 +82,6 @@ model_SDDT.setObjective(quicksum(t * (y[n_inst(1)][t]-y[n_inst(1)][t-1]) for t i
 # Constraints
 # model_SDDT.addConstrs((y[i, t] == 0 for i in range(0, n_inst(1)) for t in range(0, ES_i-1)), name="no starting before ES_i")
 model_SDDT.addConstrs((y[i, LS_i] == 1 for i in range(0, n_inst(1))), name="all activities have started at LS_i")
-model_SDDT.addConstrs(for (i,s) in arcs(1))
+model_SDDT.addConstrs((y[i, t-d_i_inst(1)] - y[j, t] >= 0 for (i, j) in arcs(1) for t  in range(ES_i+1, LS_i)), name="disaggregated precedence constraint")
 
 
