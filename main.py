@@ -68,16 +68,16 @@ def arcs(x):
 model_SDDT = Model("RCPSP: Time-Indexed Formulation with Step Variables and disaggregated precedence constraints")
 
 # Using naive approach to create set t
-ES_i = 1
+ES_i = 0
 LS_i = sum(d_i_inst(1))
 
 # Variables
 #for i in range(1, n_inst(1)):
-#    for t in range(ES_i, LS_i):
+   #for t in range(ES_i, LS_i):
 y = model_SDDT.addVars(n_inst(1), LS_i, vtype = GRB.BINARY, name = "step variable")
 
 # Objective Function
-model_SDDT.setObjective(quicksum(t * (y[n_inst(1)-1, t]-y[n_inst(1)-1, t-1]) for t in range(ES_i, LS_i)),
+model_SDDT.setObjective(quicksum(t * (y[n_inst(1)-1, t]-y[n_inst(1)-1, t-1]) for t in range(ES_i+1, LS_i)) + y[n_inst(1)-1, ES_i],
                         GRB.MINIMIZE)
 
 # Constraints
@@ -102,10 +102,10 @@ for (i, j) in arcs(1):
 #                       for t in range(ES_i, LS_i)),
 #                      name="(2.10) disaggregated precedence constraint")
 
-model_SDDT.addConstrs((quicksum(r_i_k_inst(1).iloc[i, k]*(y[i, t] - negative_index(y,i, t-d_i_inst(1)[i])) for i in range(0, n_inst(1))) <= R_k_inst(1)[k]
+model_SDDT.addConstrs((quicksum(r_i_k_inst(1).iloc[i, k]*(y[i, t] - negative_index(y,i, t-d_i_inst(1)[i])) for i in range(n_inst(1))) <= R_k_inst(1)[k]
                       for t in range(ES_i, LS_i)
-                      for k in range(0, k_inst(1))),
-                     name="(2.11) ressource constraint")
+                      for k in range(k_inst(1))),
+                     name="(2.11) resource constraint")
 # First Attempt to handle negative indices failed:
 # for i in range(0, n_inst(1)):
 #    if t-d_i_inst(1)[i] >= 0:
@@ -122,13 +122,13 @@ model_SDDT.addConstrs((quicksum(r_i_k_inst(1).iloc[i, k]*(y[i, t] - negative_ind
 #                       for k in range(0, k_inst(1))),
 #                      name="(2.11) ressource constraint")
 
-model_SDDT.addConstrs((y[i, LS_i] == 1
-                       for i in range(0, n_inst(1))),
+model_SDDT.addConstrs((y[i, LS_i-1] == 1
+                       for i in range(n_inst(1))),
                       name="(2.12) all activities have started at LS_i")
 
 model_SDDT.addConstrs((y[i, t] - y[i, t-1] >= 0
-                       for i in range(0, n_inst(1))
-                       for t in range(ES_i, LS_i)),
+                       for i in range(n_inst(1))
+                       for t in range(ES_i+1, LS_i)),
                       name="(2.13) step variable cannot switch back to 0")
 
 # model_SDDT.addConstrs((y[i, t] == 0
@@ -139,6 +139,8 @@ model_SDDT.addConstrs((y[i, t] - y[i, t-1] >= 0
 model_SDDT.setParam('TimeLimit', 5)
 
 model_SDDT.optimize()
+print("Objective value SDDT: " + str(model_SDDT.objVal))
+print("Runtime in seconds: " + str(model_SDDT.runtime) + "s")
 
 
 
