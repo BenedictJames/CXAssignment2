@@ -131,10 +131,10 @@ model_SDDT.addConstrs((y[i, t] - y[i, t-1] >= 0
                        for t in range(ES_i+1, LS_i)),
                       name="(2.13) step variable cannot switch back to 0")
 
-# model_SDDT.addConstrs((y[i, t] == 0
-#                       for i in range(0, n_inst(1))
-#                       for t in range(0, ES_i-1)),
-#                      name="(2.14) no starting before ES_i")
+model_SDDT.addConstrs((y[i, t] == 0
+                       for i in range(n_inst(1))
+                      for t in range(ES_i-1)),
+                     name="(2.14) no starting before ES_i")
 
 model_SDDT.setParam('TimeLimit', 5)
 
