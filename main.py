@@ -90,6 +90,7 @@ def negative_index(dv, index_1, index_2):
 # Storing ES for each activity in each instance
 df_ES = pd.DataFrame(0, index = range(n_inst(1)), columns = sName[1:])
 # Model
+
 for instance in range(1, len(RCPSP_inst_dict_named)+1):
     Generic = Model("Generic Time Scheduling Problem")
     Generic.setParam('TimeLimit', 20)
@@ -220,7 +221,7 @@ for instance in range(1, 2):
                            for t in range(df_ES.iloc[i, instance-1], LS_i)),
                           name="(2.13) step variable cannot switch back to 0")
 
-    model_SDDT.addConstrs((y[i, t] == 0
+    model_SDT.addConstrs((y[i, t] == 0
                            for i in range(n_inst(instance))
                            for t in range(df_ES.iloc[i, instance-1] - 1)),
                           name="(2.14) no starting before ES_i")
