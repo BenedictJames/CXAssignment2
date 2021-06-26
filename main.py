@@ -176,7 +176,7 @@ model_SDT.setObjective(quicksum(t * (y[n_inst(1) - 1, t] - negative_index(y, n_i
 
 
 # Constraints
-model_SDT.addConstrs((quicksum(t * (y[j, t] - negative_index(y, j, t - 1)) for t in range(ES_i, LS_i)) +
+model_SDT.addConstrs((quicksum(t * (y[j, t] - negative_index(y, j, t - 1)) for t in range(ES_i, LS_i)) -
                     quicksum(t * (y[i, t] - negative_index(y, i, t - 1)) for t in range(ES_i, LS_i)) >= d_i_inst(1)[i] for (i, j) in arcs(1)),
                     name="(2.10) aggregated precedence constraint")
 
