@@ -24,7 +24,6 @@ names_dict = {orig_col_names[i]: new_col_names[i] for i in range(len(orig_col_na
 def rename_columns(df, dict):
     return df.rename(columns=dict)
 
-
 # Apply function to dictionary containing all RCPSP test instances as dfs; this will name the dfs' columns
 RCPSP_inst_dict_named = {k: rename_columns(v, names_dict) for k, v in RCPSP_inst_dict.items()}
 
@@ -87,22 +86,25 @@ def negative_index(dv, index_1, index_2):
     else:
         return 0
 
+# Preparing Results df
+
+
 
 # Models
 model_SDT = Model("RCPSP: Time-Indexed Formulation with Step Variables and aggregated precedence constraints")
-model_SDT.setParam('TimeLimit', 10)
+model_SDT.setParam('TimeLimit', 10*60)
 model_SDT.setParam('LogtoConsole', 0)
 
 model_SDDT = Model("RCPSP: Time-Indexed Formulation with Step Variables and disaggregated precedence constraints")
-model_SDDT.setParam('TimeLimit', 10)
+model_SDDT.setParam('TimeLimit', 10*60)
 model_SDDT.setParam('LogtoConsole', 0)
 
-for instance in range(1, 2):
+for instance in range(1, len(RCPSP_inst_dict_named)+1):
 
     ## Lower and Upper Bound for t
     # Using naive approach to create set t
     ES_i = 0
-    LS_i = sum(d_i_inst(instance))
+    LS_i = sum(d_i_inst(instance))+1
 
     # Variables
     # for i in range(1, n_inst(1)):
@@ -136,16 +138,6 @@ for instance in range(1, 2):
                            for t in range(ES_i, LS_i)
                            for k in range(k_inst(instance))),
                           name="(2.11) resource constraint")
-    # First Attempt to handle negative indices failed:
-    # for i in range(0, n_inst(1)):
-    #    if t-d_i_inst(1)[i] >= 0:
-    #        model_SDDT.addConstrs((quicksum(r_i_k_inst(1).iloc[i, k]*(y[i, t]-y[i, t-d_i_inst(1)[i]]) for i in range(0, n_inst(1))) <= R_k_inst(1)[k]
-    #                               for k in range(0, k_inst(1)) for t in range(ES_i, LS_i)),
-    #                              name="(2.11) ressource constraint with t-d_i >=0")
-    #    else:
-    #        model_SDDT.addConstrs((quicksum(r_i_k_inst(1).iloc[i, k]*(y[i, t]-0) for i in range(0, n_inst(1))) <= R_k_inst(1)[k]
-    #                               for k in range(0, k_inst(1)) for t in range(ES_i, LS_i)),
-    #                              name="(2.11) ressource constraint with t-d_i < 0")
     # Old Constraint failed due to index t-d_i_inst(1)[i] < 0
     # model_SDDT.addConstrs((quicksum(r_i_k_inst(1).iloc[i, k]*(y[i, t]-y[i, t-d_i_inst(1)[i]]) for i in range(0, n_inst(1))) <= R_k_inst(1)[k]
     #                       for t in range(ES_i, LS_i)
@@ -169,7 +161,7 @@ for instance in range(1, 2):
     model_SDDT.optimize()
     print("Objective value SDDT of test instance " + str(sName[instance]) + ": " + str(model_SDDT.objVal))
     print("Runtime model SDDT for test instance " + str(sName[instance]) + " in seconds: " + str(model_SDDT.runtime) + "s")
-    print("Gap to optimum for model SDDT for test instance " + str(sName[instance]) + " in seconds: " + str(model_SDDT.MIPGap) + "s")
+#    print("Gap to optimum for model SDDT for test instance " + str(sName[instance]) + " in seconds: " + str(model_SDDT.MIPGap) + "s")
 
     ## MODEL SDT
 
@@ -209,5 +201,5 @@ for instance in range(1, 2):
     model_SDT.optimize()
     print("Objective value SDT of test instance " + str(sName[instance]) + ": " + str(model_SDT.objVal))
     print("Runtime model SDT for test instance " + str(sName[instance]) + " in seconds: " + str(model_SDT.runtime) + "s")
-    print("Gap to optimum for model SDT for test instance " + str(sName[instance]) + " in seconds: " + str(model_SDT.MIPGap) + "s")
+#    print("Gap to optimum for model SDT for test instance " + str(sName[instance]) + " in seconds: " + str(model_SDT.MIPGap) + "s")
 
