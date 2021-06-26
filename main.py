@@ -156,9 +156,9 @@ for instance in range(1, 2):
                            for i in range(n_inst(instance))),
                           name="(2.12) all activities have started at LS_i")
 
-    model_SDDT.addConstrs((y[i, t] - y[i, t - 1] >= 0
+    model_SDDT.addConstrs((y[i, t] - negative_index(y, i, t - 1) >= 0
                            for i in range(n_inst(instance))
-                           for t in range(ES_i + 1, LS_i)),
+                           for t in range(ES_i, LS_i)),
                           name="(2.13) step variable cannot switch back to 0")
 
     model_SDDT.addConstrs((y[i, t] == 0
@@ -196,9 +196,9 @@ for instance in range(1, 2):
                            for i in range(n_inst(instance))),
                           name="(2.12) all activities have started at LS_i")
 
-    model_SDT.addConstrs((y[i, t] - y[i, t - 1] >= 0
+    model_SDT.addConstrs((y[i, t] - negative_index(y, i, t - 1) >= 0
                            for i in range(n_inst(instance))
-                           for t in range(ES_i + 1, LS_i)),
+                           for t in range(ES_i, LS_i)),
                           name="(2.13) step variable cannot switch back to 0")
 
     model_SDT.addConstrs((y[i, t] == 0
