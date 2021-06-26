@@ -195,19 +195,19 @@ for instance in range(1, 2):
     y = model_SDT.addVars(n_inst(instance), LS_i, vtype=GRB.BINARY, name="step variable")
 
     # Objective Function
-    model_SDT.setObjective(quicksum(t * (y[n_inst(instance) - 1, t] - negative_index(y, n_inst(instance) - 1, t - 1)) for t in range(ES_i, LS_i)),
+    model_SDT.setObjective(quicksum(t * (y[n_inst(instance) - 1, t] - negative_index(y, n_inst(instance) - 1, t - 1)) for t in range(df_ES.iloc[n_inst(instance)-1, instance-1], LS_i)),
                            GRB.MINIMIZE)
 
 
     # Constraints
-    model_SDT.addConstrs((quicksum(t * (y[j, t] - negative_index(y, j, t - 1)) for t in range(ES_i, LS_i)) -
-                        quicksum(t * (y[i, t] - negative_index(y, i, t - 1)) for t in range(ES_i, LS_i)) >= d_i_inst(instance)[i] for (i, j) in arcs(instance)),
+    model_SDT.addConstrs((quicksum(t * (y[j, t] - negative_index(y, j, t - 1)) for t in range(0, LS_i)) -
+                        quicksum(t * (y[i, t] - negative_index(y, i, t - 1)) for t in range(0, LS_i)) >= d_i_inst(instance)[i] for (i, j) in arcs(instance)),
                         name="(2.10) aggregated precedence constraint")
 
     model_SDT.addConstrs((quicksum(
         r_i_k_inst(instance).iloc[i, k] * (y[i, t] - negative_index(y, i, t - d_i_inst(instance)[i])) for i in range(n_inst(instance))) <=
                            R_k_inst(instance)[k]
-                           for t in range(ES_i, LS_i)
+                           for t in range(0, LS_i-1)
                            for k in range(k_inst(instance))),
                           name="(2.11) resource constraint")
 
@@ -217,12 +217,12 @@ for instance in range(1, 2):
 
     model_SDT.addConstrs((y[i, t] - negative_index(y, i, t - 1) >= 0
                            for i in range(n_inst(instance))
-                           for t in range(ES_i, LS_i)),
+                           for t in range(df_ES.iloc[i, instance-1], LS_i)),
                           name="(2.13) step variable cannot switch back to 0")
 
-    model_SDT.addConstrs((y[i, t] == 0
+    model_SDDT.addConstrs((y[i, t] == 0
                            for i in range(n_inst(instance))
-                           for t in range(ES_i - 1)),
+                           for t in range(df_ES.iloc[i, instance-1] - 1)),
                           name="(2.14) no starting before ES_i")
 
     model_SDT.optimize()
