@@ -183,7 +183,7 @@ for instance in range(1, 2):
 
     model_SDDT.addConstrs((y[i, t] == 0
                            for i in range(n_inst(instance))
-                           for t in range(df_ES.iloc[i, instance-1] - 1)),
+                           for t in range(df_ES.iloc[i, instance-1])),
                           name="(2.14) no starting before ES_i")
 
     model_SDDT.optimize()
@@ -223,7 +223,7 @@ for instance in range(1, 2):
 
     model_SDT.addConstrs((y[i, t] == 0
                            for i in range(n_inst(instance))
-                           for t in range(df_ES.iloc[i, instance-1] - 1)),
+                           for t in range(df_ES.iloc[i, instance-1])),
                           name="(2.14) no starting before ES_i")
 
     model_SDT.optimize()
