@@ -97,7 +97,7 @@ model_SDDT = Model("RCPSP: Time-Indexed Formulation with Step Variables and disa
 model_SDDT.setParam('TimeLimit', 10)
 model_SDDT.setParam('LogtoConsole', 0)
 
-for instance in range(1, len(RCPSP_inst_dict_named)+1):
+for instance in range(1, 2):
 
     ## Lower and Upper Bound for t
     # Using naive approach to create set t
@@ -167,9 +167,9 @@ for instance in range(1, len(RCPSP_inst_dict_named)+1):
                           name="(2.14) no starting before ES_i")
 
     model_SDDT.optimize()
-    print("Objective value SDDT of test instance " + str(instance) + ": " + str(model_SDDT.objVal))
-    print("Runtime model SDDT for test instance " + str(instance) + " in seconds: " + str(model_SDDT.runtime) + "s")
-    print("Gap to optimum for model SDDT for test instance " + str(instance) + " in seconds: " + str(model_SDDT.MIPGap) + "s")
+    print("Objective value SDDT of test instance " + str(sName[instance]) + ": " + str(model_SDDT.objVal))
+    print("Runtime model SDDT for test instance " + str(sName[instance]) + " in seconds: " + str(model_SDDT.runtime) + "s")
+    print("Gap to optimum for model SDDT for test instance " + str(sName[instance]) + " in seconds: " + str(model_SDDT.MIPGap) + "s")
 
     ## MODEL SDT
 
@@ -207,7 +207,7 @@ for instance in range(1, len(RCPSP_inst_dict_named)+1):
                           name="(2.14) no starting before ES_i")
 
     model_SDT.optimize()
-    print("Objective value SDT of test instance " + str(instance) + ": " + str(model_SDT.objVal))
-    print("Runtime model SDT for test instance " + str(instance) + " in seconds: " + str(model_SDT.runtime) + "s")
-    print("Gap to optimum for model SDT for test instance " + str(instance) + " in seconds: " + str(model_SDT.MIPGap) + "s")
+    print("Objective value SDT of test instance " + str(sName[instance]) + ": " + str(model_SDT.objVal))
+    print("Runtime model SDT for test instance " + str(sName[instance]) + " in seconds: " + str(model_SDT.runtime) + "s")
+    print("Gap to optimum for model SDT for test instance " + str(sName[instance]) + " in seconds: " + str(model_SDT.MIPGap) + "s")
 
