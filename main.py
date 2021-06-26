@@ -80,6 +80,13 @@ def arcs(x):
             if (math.isnan(a.iat[r, c]) == False): b.append((r, a.iat[r, c] - 1))
     return b
 
+# Function to handle negative indices dv
+def negative_index(dv, index_1, index_2):
+    if index_2 >= 0:
+        return dv[index_1, index_2]
+    else:
+        return 0
+
 
 # Model Building for instance 1
 # Model
@@ -97,38 +104,25 @@ LS_i = sum(d_i_inst(1))
 y = model_SDDT.addVars(n_inst(1), LS_i, vtype=GRB.BINARY, name="step variable")
 
 # Objective Function
-model_SDDT.setObjective(
-    quicksum(t * (y[n_inst(1) - 1, t] - y[n_inst(1) - 1, t - 1]) for t in range(ES_i + 1, LS_i)) + ES_i *y[
-        n_inst(1) - 1, ES_i],
-    GRB.MINIMIZE)
-
+model_SDDT.setObjective(quicksum(t * (y[n_inst(1) - 1, t] - negative_index(y, n_inst(1) - 1, t - 1)) for t in range(ES_i, LS_i)),
+                       GRB.MINIMIZE)
 
 # Constraints
 
-# Function to handle negative indices dv
-def negative_index(dv, index_1, index_2):
-    if index_2 >= 0:
-        return dv[index_1, index_2]
-    else:
-        return 0
-
-
-
-
+# First Attempt to handle negative indices
 # For Constraints where DV y is indexed at t-d_i, it first has to checked that t-d_i does not turn negative
 # If t-d_i does not turn negative, the respective DV y is set to 0
-for (i, j) in arcs(1):
-    for t in range(ES_i, LS_i):
-        if t - d_i_inst(1)[i] >= 0:
-            model_SDDT.addConstr((y[i, t - d_i_inst(1)[i]] - y[j, t] >= 0),
-                                 name="(2.10) disaggregated precedence constraint with t-d_i >=0")
-        else:
-            model_SDDT.addConstr((y[j, t] == 0), name="(2.10) disaggregated precedence constraint with t-d_i < 0")
-# Old Constraint failed due to index t-d_i_inst(1)[i] < 0
-# model_SDDT.addConstrs((y[i, t-d_i_inst(1)[i]] - y[j, t] >= 0
-#                       for (i, j) in arcs(1)
-#                       for t in range(ES_i, LS_i)),
-#                      name="(2.10) disaggregated precedence constraint")
+#for (i, j) in arcs(1):
+#    for t in range(ES_i, LS_i):
+#        if t - d_i_inst(1)[i] >= 0:
+#            model_SDDT.addConstr((y[i, t - d_i_inst(1)[i]] - y[j, t] >= 0),
+#                                 name="(2.10) disaggregated precedence constraint with t-d_i >=0")
+#        else:
+#            model_SDDT.addConstr((y[j, t] == 0), name="(2.10) disaggregated precedence constraint with t-d_i < 0")
+model_SDDT.addConstrs((negative_index(y, i, t - d_i_inst(1)[i]) - y[j, t] >= 0
+                       for (i, j) in arcs(1)
+                       for t in range(ES_i, LS_i)),
+                      name="(2.10) disaggregated precedence constraint")
 
 model_SDDT.addConstrs((quicksum(
     r_i_k_inst(1).iloc[i, k] * (y[i, t] - negative_index(y, i, t - d_i_inst(1)[i])) for i in range(n_inst(1))) <=
@@ -177,19 +171,14 @@ print("Runtime in seconds: " + str(model_SDDT.runtime) + "s")
 y = model_SDT.addVars(n_inst(1), LS_i, vtype=GRB.BINARY, name="step variable")
 
 # Objective Function
-model_SDT.setObjective(quicksum(t * (y[n_inst(1) - 1, t] - y[n_inst(1) - 1, t - 1]) for t in range(ES_i + 1, LS_i)) + ES_i * y[
-    n_inst(1) - 1, ES_i],
+model_SDT.setObjective(quicksum(t * (y[n_inst(1) - 1, t] - negative_index(y, n_inst(1) - 1, t - 1)) for t in range(ES_i, LS_i)),
                        GRB.MINIMIZE)
 
 
-
-
 # Constraints
-for (i, j) in arcs(1):
-    model_SDT.addConstr(quicksum(t * (y[j, t] - y[j, t-1]) for t in range(ES_i+1, LS_i)) +
-                        ES_i * y[j, ES_i] - ES_i * y[i,ES_i] -
-                        quicksum(t * (y[i, t] - y[i, t-1]) for t in range(ES_i+1, LS_i) ) >=d_i_inst(1)[i] ,
-                                  name="(2.10) aggregated precedence constraint")
+model_SDT.addConstr((quicksum(t * (y[j, t] - negative_index(y, j, sum([t, -1]))) for t in range(ES_i, LS_i)) +
+                    quicksum(t * (y[i, t] - negative_index(y, i, t-1)) for t in range(ES_i, LS_i)) >= d_i_inst(1)[i] for (i, j) in arcs(1)),
+                    name="(2.10) aggregated precedence constraint")
 
 model_SDT.addConstrs((quicksum(
     r_i_k_inst(1).iloc[i, k] * (y[i, t] - negative_index(y, i, t - d_i_inst(1)[i])) for i in range(n_inst(1))) <=
