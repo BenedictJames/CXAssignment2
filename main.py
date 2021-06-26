@@ -86,9 +86,35 @@ def negative_index(dv, index_1, index_2):
     else:
         return 0
 
-# Preparing Results df
+# Solving The Generic Time Scheduling Program
+# Storing ES for each activity in each instance
+df_ES = pd.DataFrame(0, index = range(n_inst(1)), columns = sName[1:])
+# Model
+for instance in range(1, len(RCPSP_inst_dict_named)+1):
+    Generic = Model("Generic Time Scheduling Problem")
+    Generic.setParam('TimeLimit', 20)
+    Generic.setParam('LogtoConsole', 0)
+    s = Generic.addVars(n_inst(instance), name="start times")
+
+    # objective
+    Generic.setObjective(quicksum(s[i] for i in range(n_inst(instance))), GRB.MINIMIZE)
+
+    # constraints
+    Generic.addConstrs((s[j] - s[i] >= d_i_inst(instance)[i] for (i, j) in arcs(instance)), "timelags")
+    Generic.addConstr(s[0] == 0)
+    Generic.addConstr(s[n_inst(instance) - 1] <= sum(d_i_inst(instance)))
+
+    # solve the model
+    Generic.optimize()
+    # print("Number of jobs: " + str(n_inst(instance)))
+    # print("Objective value: " + str(Generic.objVal))
+    # Write model solutions to df with all ES
+    a = Generic.getVars()
+    for v in range(n_inst(instance)):
+        df_ES.iloc[v, instance-1] = a[v].x
 
 
+## RCPSP Models
 
 # Models
 model_SDT = Model("RCPSP: Time-Indexed Formulation with Step Variables and aggregated precedence constraints")
@@ -99,11 +125,12 @@ model_SDDT = Model("RCPSP: Time-Indexed Formulation with Step Variables and disa
 model_SDDT.setParam('TimeLimit', 10*60)
 model_SDDT.setParam('LogtoConsole', 0)
 
-for instance in range(1, len(RCPSP_inst_dict_named)+1):
+#for instance in range(1, len(RCPSP_inst_dict_named)+1):
+for instance in range(1, 2):
 
     ## Lower and Upper Bound for t
     # Using naive approach to create set t
-    ES_i = 0
+    # ES_i = 0
     LS_i = sum(d_i_inst(instance))+1
 
     # Variables
@@ -112,7 +139,7 @@ for instance in range(1, len(RCPSP_inst_dict_named)+1):
     y = model_SDDT.addVars(n_inst(instance), LS_i, vtype=GRB.BINARY, name="step variable")
 
     # Objective Function
-    model_SDDT.setObjective(quicksum(t * (y[n_inst(instance) - 1, t] - negative_index(y, n_inst(instance) - 1, t - 1)) for t in range(ES_i, LS_i)),
+    model_SDDT.setObjective(quicksum(t * (y[n_inst(instance) - 1, t] - negative_index(y, n_inst(instance) - 1, t - 1)) for t in range(df_ES.iloc[n_inst(instance)-1, instance-1], LS_i)),
                            GRB.MINIMIZE)
 
     # Constraints
@@ -129,13 +156,13 @@ for instance in range(1, len(RCPSP_inst_dict_named)+1):
     #            model_SDDT.addConstr((y[j, t] == 0), name="(2.10) disaggregated precedence constraint with t-d_i < 0")
     model_SDDT.addConstrs((negative_index(y, i, t - d_i_inst(instance)[i]) - y[j, t] >= 0
                            for (i, j) in arcs(instance)
-                           for t in range(ES_i, LS_i)),
+                           for t in range(0, LS_i)),
                           name="(2.10) disaggregated precedence constraint")
 
     model_SDDT.addConstrs((quicksum(
         r_i_k_inst(instance).iloc[i, k] * (y[i, t] - negative_index(y, i, t - d_i_inst(instance)[i])) for i in range(n_inst(instance))) <=
                            R_k_inst(instance)[k]
-                           for t in range(ES_i, LS_i)
+                           for t in range(0, LS_i-1)
                            for k in range(k_inst(instance))),
                           name="(2.11) resource constraint")
     # Old Constraint failed due to index t-d_i_inst(1)[i] < 0
@@ -150,12 +177,12 @@ for instance in range(1, len(RCPSP_inst_dict_named)+1):
 
     model_SDDT.addConstrs((y[i, t] - negative_index(y, i, t - 1) >= 0
                            for i in range(n_inst(instance))
-                           for t in range(ES_i, LS_i)),
+                           for t in range(df_ES.iloc[i, instance-1], LS_i)),
                           name="(2.13) step variable cannot switch back to 0")
 
     model_SDDT.addConstrs((y[i, t] == 0
                            for i in range(n_inst(instance))
-                           for t in range(ES_i - 1)),
+                           for t in range(df_ES.iloc[i, instance-1] - 1)),
                           name="(2.14) no starting before ES_i")
 
     model_SDDT.optimize()
@@ -202,4 +229,6 @@ for instance in range(1, len(RCPSP_inst_dict_named)+1):
     print("Objective value SDT of test instance " + str(sName[instance]) + ": " + str(model_SDT.objVal))
     print("Runtime model SDT for test instance " + str(sName[instance]) + " in seconds: " + str(model_SDT.runtime) + "s")
 #    print("Gap to optimum for model SDT for test instance " + str(sName[instance]) + " in seconds: " + str(model_SDT.MIPGap) + "s")
+
+
 
