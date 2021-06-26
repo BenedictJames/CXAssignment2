@@ -88,11 +88,14 @@ def negative_index(dv, index_1, index_2):
         return 0
 
 
-# Model Building for instance 1
-# Model
+# Models
 model_SDT = Model("RCPSP: Time-Indexed Formulation with Step Variables and aggregated precedence constraints")
+model_SDT.setParam('TimeLimit', 10)
+model_SDT.setParam('LogtoConsole', 0)
 
 model_SDDT = Model("RCPSP: Time-Indexed Formulation with Step Variables and disaggregated precedence constraints")
+model_SDDT.setParam('TimeLimit', 10)
+model_SDDT.setParam('LogtoConsole', 0)
 
 for instance in range(1, len(RCPSP_inst_dict_named)+1):
 
@@ -163,11 +166,10 @@ for instance in range(1, len(RCPSP_inst_dict_named)+1):
                            for t in range(ES_i - 1)),
                           name="(2.14) no starting before ES_i")
 
-    model_SDDT.setParam('TimeLimit', 10)
-
     model_SDDT.optimize()
     print("Objective value SDDT of test instance " + str(instance) + ": " + str(model_SDDT.objVal))
     print("Runtime model SDDT for test instance " + str(instance) + " in seconds: " + str(model_SDDT.runtime) + "s")
+    print("Gap to optimum for model SDDT for test instance " + str(instance) + " in seconds: " + str(model_SDDT.MIPGap) + "s")
 
     ## MODEL SDT
 
@@ -204,9 +206,8 @@ for instance in range(1, len(RCPSP_inst_dict_named)+1):
                            for t in range(ES_i - 1)),
                           name="(2.14) no starting before ES_i")
 
-    model_SDT.setParam('TimeLimit', 10)
-
     model_SDT.optimize()
     print("Objective value SDT of test instance " + str(instance) + ": " + str(model_SDT.objVal))
     print("Runtime model SDT for test instance " + str(instance) + " in seconds: " + str(model_SDT.runtime) + "s")
+    print("Gap to optimum for model SDT for test instance " + str(instance) + " in seconds: " + str(model_SDT.MIPGap) + "s")
 
